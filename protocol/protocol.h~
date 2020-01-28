@@ -1,0 +1,29 @@
+#pragma once
+#include <boost/archive/binary_iarchive.hpp>
+#include <boost/archive/binary_oarchive.hpp>
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/string.hpp>
+#include <string>
+#include <vector>
+namespace test_np{
+    enum MSG_TYPE{GET_MSG, PUT_MSG, LIST_ID};
+    struct TestStoredData{
+        std::string                       msg_id_;
+        std::string                     msg_data_;
+    };
+    struct TestMsg{
+        MSG_TYPE                        msg_type_;
+        std::string                       msg_id_;
+        std::string                     msg_data_;
+        std::vector<std::string> clients_id_list_;
+        
+        template<class Archive>
+        void serialize(Archive & ar, const unsigned int version){
+          ar & msg_type_;
+          ar & msg_id_;
+          ar & msg_data_;
+          ar & clients_id_list_;
+        }
+    };
+}
