@@ -31,12 +31,15 @@ namespace test_np{
         std::string new_msg_data = randomString(MAX_LEN_MES);
         auto time_now_sec = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::time_point_cast<std::chrono::seconds>(std::chrono::system_clock::now()).time_since_epoch());
         /*
-          Create new client id
+          Create new msg id
         */
         std::string id = address_ + std::to_string(port_) + std::to_string(time_now_sec.count()) + new_msg_data;
         client_.write(creator_.create({PUT_MSG, sha256(id), new_msg_data, {id_}}));
         set_timer_.reset(SET_TIME);
     }
+    /*
+      Callback to check is msg fully received
+    */
     bool ClientLogic::checkMsg(const std::string& msg) const{
         return parser_.getLength(msg) >= 0;
     }
