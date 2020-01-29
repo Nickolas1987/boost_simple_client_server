@@ -1,7 +1,10 @@
 #include "client_logic.h"
 #include <boost/program_options.hpp>
+#include "test_message_parser.h"
+#include "test_message_creator.h"
 #include <iostream>
 using namespace boost::asio;
+using namespace test_np;
 namespace po = boost::program_options;
 
 io_service service;
@@ -28,8 +31,14 @@ int main(int argc, char** argv){
         return 1;
     }
     if(vm.count("address") && vm.count("port")){
-      test_np::ClientLogic new_server(service, vm["address"].as<std::string>(), vm["port"].as<int>());
-      service.run();
+      try{
+        test_np::ClientLogic new_server(service, vm["address"].as<std::string>(), vm["port"].as<int>(), boost::shared_ptr<IMessageParser<TestMsg>>(new TestMessageParser), 
+                                                                                            boost::shared_ptr<IMessageCreator<const TestMsg&>>(new TestMessageCreator));
+        service.run();
+      }
+      catch(std::runtime_error& e){
+        std::cout << e.what() << std::endl;
+      }
     }
     return 0;
 }

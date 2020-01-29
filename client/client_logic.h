@@ -3,12 +3,13 @@
 #include "protocol.h"
 #include "timer.h"
 #include <string>
-#include "test_message_parser.h"
-#include "test_message_creator.h"
+#include "imessage_parser.h"
+#include "imessage_creator.h"
 namespace test_np{
     class ClientLogic{
       public:
-        ClientLogic(io_service& service, const std::string& address, int port);
+        ClientLogic(io_service& service, const std::string& address, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, 
+                                                                     const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator);
         ~ClientLogic();
       private:
         void        recvMsg(TalkToServer::ptr, const std::string&);
@@ -24,8 +25,7 @@ namespace test_np{
         deadline_timer           get_dl_;
         mutable Timer            set_timer_;
         mutable Timer            get_timer_;
-        char                     mes_separ_;
-        TestMessageParser   parser_;
-        TestMessageCreator  creator_;
+        boost::shared_ptr<IMessageParser<TestMsg>>   parser_;
+        boost::shared_ptr<IMessageCreator<const TestMsg&>>  creator_;
     };
 }

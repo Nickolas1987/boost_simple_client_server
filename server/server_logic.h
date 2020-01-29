@@ -48,7 +48,6 @@ namespace test_np{
         Statistics          statistics_;
         deadline_timer      dl_;
         mutable Timer       timer_;
-        char                mes_separ_;
         boost::shared_ptr<IMessageParser<TestMsg>>   parser_;
         boost::shared_ptr<IMessageCreator<const TestMsg&>>  creator_;
     };

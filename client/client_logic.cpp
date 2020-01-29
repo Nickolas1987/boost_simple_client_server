@@ -11,11 +11,17 @@ namespace test_np{
     static const int UP_BOUND_TIME = 500;
     static const int SET_TIME = 5000;
     static const int MAX_LEN_MES   = 30;
-    ClientLogic::ClientLogic(io_service& service, const std::string& address, int port) : client_(service, address, port, boost::bind(&ClientLogic::recvMsg, this, _1, _2), 
-                                                                                                                          boost::bind(&ClientLogic::checkMsg, this, _1)), 
-                                                                                          address_(address), port_(port),
-                                                                                          set_dl_(service), set_timer_(set_dl_, boost::bind(&ClientLogic::setMsg, this)),
-                                                                                          get_dl_(service), get_timer_(get_dl_, boost::bind(&ClientLogic::getMsg, this)){
+    ClientLogic::ClientLogic(io_service& service, const std::string& address, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, 
+                                                                               const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator) : 
+                                                                                        client_(service, address, port, boost::bind(&ClientLogic::recvMsg, this, _1, _2), 
+                                                                                        boost::bind(&ClientLogic::checkMsg, this, _1)), 
+                                                                                        address_(address), port_(port),
+                                                                                        set_dl_(service), set_timer_(set_dl_, boost::bind(&ClientLogic::setMsg, this)),
+                                                                                        get_dl_(service), get_timer_(get_dl_, boost::bind(&ClientLogic::getMsg, this)),
+                                                                                        parser_(parser), creator_(creator){
+        if (!parser_ || !creator_){
+          throw std::runtime_error("bad constructor params");
+        }
         std::srand(unsigned(std::time(0)));
     }
     ClientLogic::~ClientLogic(){
@@ -25,7 +31,7 @@ namespace test_np{
     }
     void ClientLogic::getMsg(){
         size_t index = rand() % id_mes_list_.size();
-        client_.write(creator_.create({GET_MSG, id_mes_list_.at(index), "", {id_}}));
+        client_.write(creator_->create({GET_MSG, id_mes_list_.at(index), "", {id_}}));
     }
     void ClientLogic::setMsg(){
         std::string new_msg_data = randomString(MAX_LEN_MES);
@@ -34,19 +40,18 @@ namespace test_np{
           Create new msg id
         */
         std::string id = address_ + std::to_string(port_) + std::to_string(time_now_sec.count()) + new_msg_data;
-        client_.write(creator_.create({PUT_MSG, sha256(id), new_msg_data, {id_}}));
+        client_.write(creator_->create({PUT_MSG, sha256(id), new_msg_data, {id_}}));
         set_timer_.reset(SET_TIME);
     }
     /*
       Callback to check is msg fully received
     */
     bool ClientLogic::checkMsg(const std::string& msg) const{
-        return parser_.getLength(msg) >= 0;
+        return parser_->isValid(msg);
     }
     void ClientLogic::recvMsg(TalkToServer::ptr client, const std::string& msg){
 
-        auto parse_res = parser_.parse(msg); 
-        TestMsg new_msg = parse_res.second;
+        TestMsg new_msg = parser_->parse(msg);
 
         switch(new_msg.msg_type_){
             case SET_ID_MSG:
