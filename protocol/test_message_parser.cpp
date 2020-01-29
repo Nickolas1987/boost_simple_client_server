@@ -3,7 +3,7 @@
 #include <sstream>
 
 namespace test_np{
-    std::pair<int, TestMsg> TestMessageParser::parse(const std::string& msg) const{
+    TestMsg TestMessageParser::parse(const std::string& msg) const{
         TestMsg new_msg;
         int len = getLength(msg);
         if (len >= 0){
@@ -12,9 +12,11 @@ namespace test_np{
             boost::archive::binary_iarchive ia(is);
             ia >> new_msg;
           }
-          return std::make_pair(len + sizeof(int), new_msg);
         }
-        return std::make_pair(len, new_msg);
+        else{
+          new_msg.msg_type_ = UNDEFINED;
+        }
+        return new_msg;
     }
     int TestMessageParser::getLength(const std::string& val) const{
         if (val.size() >= sizeof(int)){
@@ -27,5 +29,8 @@ namespace test_np{
           }
         }
         return -1;
+    }
+    bool TestMessageParser::isValid(const std::string& val) const{
+        return getLength(val) >= 0;
     }
 }

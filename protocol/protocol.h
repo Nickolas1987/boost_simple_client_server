@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 namespace test_np{
-    enum MSG_TYPE {SET_ID_MSG, GET_MSG, PUT_MSG, LIST_ID_MSG, RESPONSE_MSG, NO_DATA_MSG};
+    enum MSG_TYPE {UNDEFINED, SET_ID_MSG, GET_MSG, PUT_MSG, LIST_ID_MSG, RESPONSE_MSG, NO_DATA_MSG};
     struct TestStoredData{
         std::string                                   id_;
         std::string                                 data_;

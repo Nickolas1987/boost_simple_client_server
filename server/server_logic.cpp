@@ -7,10 +7,15 @@
 #define  WAIT_INTERVAL 30000
 
 namespace test_np{
-    ServerLogic::ServerLogic(io_service& service, int port, char separ) : server_(service, port, boost::bind(&ServerLogic::acceptClient, this, _1), 
+    ServerLogic::ServerLogic(io_service& service, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator) :
+                                                                                                 server_(service, port, boost::bind(&ServerLogic::acceptClient, this, _1), 
                                                                                                  boost::bind(&ServerLogic::recvMsg, this, _1, _2),
                                                                                                  boost::bind(&ServerLogic::checkMsg, this, _1)),
-                                                          dl_(service), timer_(dl_, boost::bind(&ServerLogic::printStat, this)), mes_separ_(separ){
+                                                                                                 dl_(service), timer_(dl_, boost::bind(&ServerLogic::printStat, this)),
+                                                                                                 parser_(parser), creator_(creator){
+        if (!parser_ || !creator_){
+          throw std::runtime_error("bad constructor params");
+        }
         timer_.reset(WAIT_INTERVAL);
     }
     void ServerLogic::acceptClient(TalkToClient::ptr client){
@@ -25,7 +30,7 @@ namespace test_np{
         */
         std::string id = remote_ad.to_string() + std::to_string(remote_ep.port()) + std::to_string(time_now_sec.count());
 
-        client->doWrite(creator_.create({SET_ID_MSG, sha256(id)}));
+        client->doWrite(creator_->create({SET_ID_MSG, sha256(id)}));
     }
     void ServerLogic::printStat() const {
         auto& stat_list = statistics_.get<0>();
@@ -35,12 +40,11 @@ namespace test_np{
         timer_.reset(WAIT_INTERVAL);
     }
     bool ServerLogic::checkMsg(const std::string& msg) const{
-        return parser_.getLength(msg) >= 0;
+        return parser_->isValid(msg);
     }
     void ServerLogic::recvMsg(TalkToClient::ptr client, const std::string& msg){
         try{
-          auto parse_res = parser_.parse(msg); 
-          TestMsg new_msg = parse_res.second;
+          TestMsg new_msg = parser_->parse(msg);
           /*
               Check is client id is not empty
           */
@@ -52,7 +56,7 @@ namespace test_np{
                     auto  fnd_iter = list.find(new_msg.msg_id_);      
 
                     if (fnd_iter != list.end()){
-                      client->doWrite(creator_.create({RESPONSE_MSG, new_msg.msg_id_, fnd_iter->data_}));
+                      client->doWrite(creator_->create({RESPONSE_MSG, new_msg.msg_id_, fnd_iter->data_}));
                       messages_.erase(fnd_iter);      
 
                       /*
@@ -65,7 +69,7 @@ namespace test_np{
                       }
                     }
                     else{
-                      client->doWrite(creator_.create({NO_DATA_MSG, new_msg.msg_id_}));
+                      client->doWrite(creator_->create({NO_DATA_MSG, new_msg.msg_id_}));
                     }
                   }
                   break;
@@ -100,7 +104,7 @@ namespace test_np{
                     for (auto& iter : list){
                       clients_id_list_.emplace_back(iter.id_);
                     }
-                    server_.sendToAll(creator_.create({LIST_ID_MSG, new_msg.msg_id_, new_msg.msg_data_, clients_id_list_ }));
+                    server_.sendToAll(creator_->create({LIST_ID_MSG, new_msg.msg_id_, new_msg.msg_data_, clients_id_list_ }));
                   }
                   break;
               }

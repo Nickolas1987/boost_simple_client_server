@@ -7,8 +7,8 @@
 #include <boost/thread/shared_mutex.hpp>
 #include "test_server.h"
 #include "protocol.h"
-#include "test_message_parser.h"
-#include "test_message_creator.h"
+#include "imessage_parser.h"
+#include "imessage_creator.h"
 #include "timer.h"
 #include <string>
 namespace test_np{
@@ -37,7 +37,7 @@ namespace test_np{
                                     >
                     >
         > Statistics;
-        ServerLogic(io_service& service, int port, char mes_separ = '\n');
+        ServerLogic(io_service& service, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator);
       private:
         void        acceptClient(TalkToClient::ptr);
         void        recvMsg(TalkToClient::ptr, const std::string&);
@@ -49,7 +49,7 @@ namespace test_np{
         deadline_timer      dl_;
         mutable Timer       timer_;
         char                mes_separ_;
-        TestMessageParser   parser_;
-        TestMessageCreator  creator_;
+        boost::shared_ptr<IMessageParser<TestMsg>>   parser_;
+        boost::shared_ptr<IMessageCreator<const TestMsg&>>  creator_;
     };
 }
