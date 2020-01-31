@@ -10,9 +10,10 @@
 #include "imessage_parser.h"
 #include "imessage_creator.h"
 #include "timer.h"
+#include "iconnection_handler.h"
 #include <string>
 namespace test_np{
-    class ServerLogic{
+    class ServerLogic: public IConnectionHandler{
       public:
         typedef boost::multi_index_container<TestStoredData,
                     boost::multi_index::indexed_by<
@@ -46,7 +47,6 @@ namespace test_np{
         TestServer          server_;
         Store               messages_;
         Statistics          statistics_;
-        deadline_timer      dl_;
         mutable Timer       timer_;
         boost::shared_ptr<IMessageParser<TestMsg>>   parser_;
         boost::shared_ptr<IMessageCreator<const TestMsg&>>  creator_;

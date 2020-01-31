@@ -1,11 +1,7 @@
 #include "test_client.h"
 namespace test_np{
-    TestClient::TestClient(io_service& service, const std::string& address, int port,
-                                                const std::function<void (TalkToServer::ptr, const std::string&)>& recv_callback, const std::function<bool (const std::string&)>& check) : 
-                                                                                                                                    service_ref_(service), 
-                                                                                                                                    recv_callback_(recv_callback),
-                                                                                                                                    check_completed_(check){
-        connection_ = TalkToServer::new_(service_ref_, ip::tcp::endpoint(ip::address::from_string(address.c_str()), port), this);
+    TestClient::TestClient(io_service& service, IConnectionHandler& handler, const std::string& address, int port) : service_ref_(service), connection_handler_(handler){
+        connection_ = TalkToServer::new_(service_ref_, ip::tcp::endpoint(ip::address::from_string(address.c_str()), port), *this);
         connection_->start();
     }
     TestClient::~TestClient(){
@@ -17,12 +13,10 @@ namespace test_np{
         connection_->stop();
     }
     void TestClient::processData(TalkToServer::ptr c, const std::string& m){
-        if (recv_callback_){
-            recv_callback_(c, m);
-        }
+        connection_handler_.recvMsg(c, m);
     }
     size_t TestClient::isDataComplete(const std::string& data){
-        bool found = check_completed_ ? check_completed_(data) : true;
+        bool found = connection_handler_.checkMsg(data);
         return found ? 0 : 1;
     }
 };

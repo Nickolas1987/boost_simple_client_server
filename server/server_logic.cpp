@@ -8,10 +8,8 @@
 
 namespace test_np{
     ServerLogic::ServerLogic(io_service& service, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator) :
-                                                                                                 server_(service, port, boost::bind(&ServerLogic::acceptClient, this, _1), 
-                                                                                                 boost::bind(&ServerLogic::recvMsg, this, _1, _2),
-                                                                                                 boost::bind(&ServerLogic::checkMsg, this, _1)),
-                                                                                                 dl_(service), timer_(dl_, boost::bind(&ServerLogic::printStat, this)),
+                                                                                                 server_(service, port, *this ),
+                                                                                                 timer_(service, boost::bind(&ServerLogic::printStat, this)),
                                                                                                  parser_(parser), creator_(creator){
         if (!parser_ || !creator_){
           throw std::runtime_error("bad constructor params");

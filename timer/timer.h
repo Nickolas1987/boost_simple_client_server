@@ -7,7 +7,7 @@
 namespace test_np{
 class Timer{
 public:
-    Timer(boost::asio::deadline_timer &t, const std::function<void()>& c) : timer_(t), interval_(1000), callback_(c) {
+    Timer(io_service& s, const std::function<void()>& c) : timer_(s), interval_(1000), callback_(c) {
     }
     void timeout(const boost::system::error_code &e) {
       if (e)
@@ -26,7 +26,7 @@ private:
       timer_.expires_from_now(boost::posix_time::milliseconds(interval_)); 
       timer_.async_wait(boost::bind(&Timer::timeout, this, boost::asio::placeholders::error));
     }
-    deadline_timer &timer_;
+    deadline_timer timer_;
     int interval_;
     std::function<void()> callback_;
 };

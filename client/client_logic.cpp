@@ -13,11 +13,10 @@ namespace test_np{
     static const int MAX_LEN_MES   = 30;
     ClientLogic::ClientLogic(io_service& service, const std::string& address, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, 
                                                                                const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator) : 
-                                                                                        client_(service, address, port, boost::bind(&ClientLogic::recvMsg, this, _1, _2), 
-                                                                                        boost::bind(&ClientLogic::checkMsg, this, _1)), 
+                                                                                        client_(service, *this, address, port), 
                                                                                         address_(address), port_(port),
-                                                                                        set_dl_(service), set_timer_(set_dl_, boost::bind(&ClientLogic::setMsg, this)),
-                                                                                        get_dl_(service), get_timer_(get_dl_, boost::bind(&ClientLogic::getMsg, this)),
+                                                                                        set_timer_(service, boost::bind(&ClientLogic::setMsg, this)),
+                                                                                        get_timer_(service, boost::bind(&ClientLogic::getMsg, this)),
                                                                                         parser_(parser), creator_(creator){
         if (!parser_ || !creator_){
           throw std::runtime_error("bad constructor params");

@@ -3,7 +3,7 @@
 #include <iostream>
 
 namespace test_np{
-    TalkToServer::TalkToServer(io_service& service_ref, const ip::tcp::endpoint& ep, ITestClient* p) : ep_(ep), parent_(p), sock_(service_ref), started_(false) {
+    TalkToServer::TalkToServer(io_service& service_ref, const ip::tcp::endpoint& ep, ITestClient& p) : ep_(ep), parent_(p), sock_(service_ref), started_(false) {
     }
     TalkToServer::~TalkToServer(){
         stop();
@@ -12,7 +12,7 @@ namespace test_np{
         sock_.async_connect(ep_, boost::bind(&TalkToServer::onConnect, this, _1));
         started_ = true;
     }
-    TalkToServer::ptr TalkToServer::new_(io_service& service_ref, const ip::tcp::endpoint& ep, ITestClient* p) {
+    TalkToServer::ptr TalkToServer::new_(io_service& service_ref, const ip::tcp::endpoint& ep, ITestClient& p) {
         TalkToServer::ptr res(new TalkToServer(service_ref, ep, p));
         return res;
     }
@@ -37,10 +37,8 @@ namespace test_np{
           return;
         }
 
-        if (parent_){
-          std::string msg = read_buffer_;
-          parent_->processData(shared_from_this(), msg);
-        }
+        std::string msg = read_buffer_;
+        parent_.processData(shared_from_this(), msg);
     }
     void TalkToServer::onWrite(const error_code & err, size_t bytes) {
     }
@@ -56,7 +54,7 @@ namespace test_np{
           read_buffer_.resize(0);
         }
         async_read(sock_, dynamic_buffer(read_buffer_), 
-                   boost::bind(&TalkToServer::readComplete, shared_from_this(), _1, _2), boost::bind(&TalkToServer::onRead, this, _1, _2));
+                   boost::bind(&TalkToServer::readComplete, this, _1, _2), boost::bind(&TalkToServer::onRead, this, _1, _2));
     }
     void TalkToServer::doWrite(const std::string & msg) {
         if ( !started() ){ 
@@ -70,7 +68,7 @@ namespace test_np{
         if ( err){
           return 0;
         }
-        bool res =  parent_ ? parent_->isDataComplete(read_buffer_) : 0;
+        bool res = parent_.isDataComplete(read_buffer_);
         return res;
     }
 }

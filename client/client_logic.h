@@ -5,8 +5,9 @@
 #include <string>
 #include "imessage_parser.h"
 #include "imessage_creator.h"
+#include "iconnection_handler.h"
 namespace test_np{
-    class ClientLogic{
+    class ClientLogic: public IConnectionHandler{
       public:
         ClientLogic(io_service& service, const std::string& address, int port, const boost::shared_ptr<IMessageParser<TestMsg>>& parser, 
                                                                      const boost::shared_ptr<IMessageCreator<const TestMsg&>>& creator);
@@ -21,8 +22,6 @@ namespace test_np{
         int                      port_;
         std::string              id_;
         std::vector<std::string> id_mes_list_;
-        deadline_timer           set_dl_;
-        deadline_timer           get_dl_;
         mutable Timer            set_timer_;
         mutable Timer            get_timer_;
         boost::shared_ptr<IMessageParser<TestMsg>>   parser_;

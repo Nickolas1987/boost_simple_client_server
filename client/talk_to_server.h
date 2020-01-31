@@ -14,14 +14,14 @@ namespace test_np{
 
   class TalkToServer : public boost::enable_shared_from_this<TalkToServer>
                      , boost::noncopyable {
-      TalkToServer(io_service& service, const ip::tcp::endpoint&, ITestClient*);
+      TalkToServer(io_service& service, const ip::tcp::endpoint&, ITestClient&);
     public:
       ~TalkToServer();
       typedef boost::system::error_code error_code;
       typedef boost::shared_ptr<TalkToServer> ptr;
 
       void start();
-      static ptr new_(io_service& service_ref, const ip::tcp::endpoint&, ITestClient*);
+      static ptr new_(io_service& service_ref, const ip::tcp::endpoint&, ITestClient&);
       void stop();
       bool started() const ;
       ip::tcp::socket & sock() ;
@@ -34,7 +34,7 @@ namespace test_np{
       size_t readComplete(const boost::system::error_code & err, size_t bytes);
     private:
       ip::tcp::endpoint ep_;
-      ITestClient * parent_;
+      ITestClient& parent_;
       ip::tcp::socket sock_;
       std::string read_buffer_;
       std::string write_buffer_;

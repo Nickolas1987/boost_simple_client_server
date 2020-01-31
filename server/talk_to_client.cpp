@@ -2,19 +2,17 @@
 #include "itest_server.h"
 
 namespace test_np{
-    TalkToClient::TalkToClient(io_service& ref, ITestServer* p) : service_ref_(ref), parent_(p), sock_(service_ref_), started_(false) {
+    TalkToClient::TalkToClient(io_service& ref, ITestServer& p) : service_ref_(ref), parent_(p), sock_(service_ref_), started_(false) {
     }
     TalkToClient::~TalkToClient(){
         stop();
     }
     void TalkToClient::start() {
         started_ = true;
-        if (parent_){
-          parent_->addClient(shared_from_this());
-        }
+        parent_.addClient(shared_from_this());
         doRead();
     }
-    TalkToClient::ptr TalkToClient::new_(io_service& s, ITestServer* p) {
+    TalkToClient::ptr TalkToClient::new_(io_service& s, ITestServer& p) {
         TalkToClient::ptr res(new TalkToClient(s, p));
         return res;
     }
@@ -26,9 +24,7 @@ namespace test_np{
         sock_.close();
 
         TalkToClient::ptr self = shared_from_this();
-        if (parent_){
-            parent_->removeClient(self);
-        }
+        parent_.removeClient(self);
     }
     bool TalkToClient::started() const { 
         return started_; 
@@ -44,10 +40,8 @@ namespace test_np{
           return;
         }
         // process the msg
-        if (parent_){
-          std::string msg = read_buffer_;
-          parent_->processData(shared_from_this(), msg);
-        }
+        std::string msg = read_buffer_;
+        parent_.processData(shared_from_this(), msg);
     }
     void TalkToClient::onWrite(const error_code & err, size_t bytes) {
     }
@@ -57,7 +51,7 @@ namespace test_np{
           read_buffer_.resize(0);
         }
         async_read(sock_, dynamic_buffer(read_buffer_), 
-                   boost::bind(&TalkToClient::readComplete, shared_from_this(), _1, _2), boost::bind(&TalkToClient::onRead, this, _1, _2));
+                   boost::bind(&TalkToClient::readComplete, this, _1, _2), boost::bind(&TalkToClient::onRead, this, _1, _2));
     }
     void TalkToClient::doWrite(const std::string & msg) {
         if ( !started() ){ 
@@ -71,7 +65,7 @@ namespace test_np{
         if ( err){
           return 0;
         }
-        bool res =  parent_ ? parent_->isDataComplete(read_buffer_) : 0;
+        bool res =  parent_.isDataComplete(read_buffer_);
         return res;
     }
 }
