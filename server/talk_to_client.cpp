@@ -9,7 +9,6 @@ namespace test_np{
     }
     void TalkToClient::start() {
         started_ = true;
-        parent_.addClient(shared_from_this());
         doRead();
     }
     TalkToClient::ptr TalkToClient::new_(io_service& s, ITestServer& p) {

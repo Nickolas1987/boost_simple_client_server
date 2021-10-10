@@ -13,6 +13,7 @@ namespace test_np{
         client->start();
         connection_handler_.acceptClient(client);
         TalkToClient::ptr new_client = TalkToClient::new_(service_ref_, *this);
+        addClient(new_client);
         acceptor_.async_accept(new_client->sock(), boost::bind(&TestServer::handleAccept, this, new_client,_1));
     }
     void TestServer::addClient(const TalkToClient::ptr& c){
